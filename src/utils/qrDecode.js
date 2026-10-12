@@ -1,4 +1,5 @@
 import jsQR from 'jsqr'
+import { AppError } from './appError'
 import { fitWithin } from './image'
 
 // Longest image side to try, largest first: a QR that is small inside a big photo needs the
@@ -15,7 +16,7 @@ export async function decodeQrFromImageFile(file) {
   try {
     bitmap = await createImageBitmap(file)
   } catch {
-    throw new Error('Không đọc được file này. Hãy chọn một ảnh (PNG, JPG…).')
+    throw new AppError('qr.error.unreadableFile')
   }
   try {
     const tried = new Set()
@@ -35,7 +36,7 @@ export async function decodeQrFromImageFile(file) {
       const text = decodeQrPixels(ctx.getImageData(0, 0, width, height))
       if (text) return text
     }
-    throw new Error('Không tìm thấy mã QR trong ảnh. Hãy dùng ảnh rõ nét, chụp thẳng vào mã.')
+    throw new AppError('qr.error.notFound')
   } finally {
     bitmap.close()
   }

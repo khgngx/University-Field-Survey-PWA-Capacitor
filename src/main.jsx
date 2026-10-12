@@ -4,6 +4,10 @@ import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.jsx'
 import './index.css'
+import { startDocumentSync } from './preferences/documentSync'
+
+// Before the first render, so <html> already carries the saved theme and language.
+startDocumentSync()
 
 // Web UI for Camera.getPhoto() in the browser; the native APK ignores it.
 defineCustomElements(window)

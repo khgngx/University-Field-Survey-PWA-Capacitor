@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { useI18n } from '../hooks/useI18n'
 import { useSyncQueue } from '../hooks/useSyncQueue'
 import { requestSync } from '../services/sync.service'
 import { retryAllFailed, retrySurvey } from '../sync/queue'
 import { STATUS } from '../utils/constants'
 
-const formatTime = (ms) => new Date(ms).toLocaleString('vi-VN')
+const formatTime = (ms, locale) => new Date(ms).toLocaleString(locale)
 
 export default function QueuePage() {
+  const { t, locale, describeError } = useI18n()
   const { ready, surveys, counts, error } = useSyncQueue()
   const [actionError, setActionError] = useState(null)
 
@@ -16,7 +18,7 @@ export default function QueuePage() {
     try {
       await action()
     } catch (err) {
-      setActionError(err.message)
+      setActionError(err)
     }
   }
 
@@ -30,30 +32,34 @@ export default function QueuePage() {
   })
   const syncNow = () => run(requestSync)
 
-  if (error) return <p role="alert" className="text-red-600">Không đọc được hàng đợi: {error.message}</p>
-  if (!ready) return <p className="text-muted">Đang tải…</p>
+  if (error) return <p role="alert" className="text-danger">{t('queue.readFailed', { message: error })}</p>
+  if (!ready) return <p className="text-muted">{t('common.loading')}</p>
 
   return (
     <section className="space-y-4">
       <header className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Hàng đợi đồng bộ</h1>
+        <h1 className="text-2xl font-semibold">{t('queue.title')}</h1>
         <button type="button" onClick={syncNow} className="btn btn-primary shrink-0">
-          Đồng bộ ngay
+          {t('queue.syncNow')}
         </button>
       </header>
 
       <p className="text-sm text-muted">
-        Chờ: {counts[STATUS.PENDING_SYNC] + counts[STATUS.SYNCING]} · Đã đồng bộ: {counts[STATUS.SYNCED]} · Lỗi: {counts[STATUS.FAILED]}
+        {t('queue.summary', {
+          pending: counts[STATUS.PENDING_SYNC] + counts[STATUS.SYNCING],
+          synced: counts[STATUS.SYNCED],
+          failed: counts[STATUS.FAILED],
+        })}
       </p>
       {counts[STATUS.FAILED] > 0 && (
         <button type="button" onClick={retryAll} className="btn btn-sm btn-secondary">
-          Thử lại tất cả ({counts[STATUS.FAILED]})
+          {t('queue.retryAll', { count: counts[STATUS.FAILED] })}
         </button>
       )}
-      {actionError && <p role="alert" className="text-sm text-red-600">{actionError}</p>}
+      {actionError && <p role="alert" className="text-sm text-danger">{describeError(actionError)}</p>}
 
       {surveys.length === 0 ? (
-        <p className="text-muted">Chưa có khảo sát nào.</p>
+        <p className="text-muted">{t('queue.empty')}</p>
       ) : (
         <ul className="space-y-3">
           {surveys.map((s) => (
@@ -63,13 +69,13 @@ export default function QueuePage() {
                 <StatusBadge status={s.status} />
               </div>
               <p className="mt-1 text-xs text-muted">
-                {formatTime(s.createdAt)} · {s.rating}★{s.version > 1 ? ` · v${s.version}` : ''}
+                {formatTime(s.createdAt, locale)} · {s.rating}★{s.version > 1 ? ` · v${s.version}` : ''}
               </p>
               {s.status === STATUS.FAILED && (
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <p className="text-xs text-red-700">{s.lastError}</p>
+                  <p className="text-xs text-danger">{s.lastError}</p>
                   <button type="button" onClick={() => retryOne(s.id)} className="btn btn-sm btn-secondary shrink-0">
-                    Thử lại
+                    {t('common.retry')}
                   </button>
                 </div>
               )}

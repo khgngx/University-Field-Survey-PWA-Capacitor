@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { errorText } from '../i18n'
 import { formatRoomQr, parseRoomQr } from './roomQr'
+
+const thrownBy = (run) => {
+  try {
+    run()
+  } catch (err) {
+    return err
+  }
+  return null
+}
 
 describe('parseRoomQr', () => {
   it('splits building|floor|room and trims whitespace', () => {
@@ -10,14 +20,14 @@ describe('parseRoomQr', () => {
   it.each(['', 'A|3', 'A|3|A305|extra', 'A||A305', '|3|A305', 'https://example.com', null, undefined])(
     'rejects malformed payload %j',
     (input) => {
-      expect(() => parseRoomQr(input)).toThrow(/QR không đúng định dạng/)
+      expect(thrownBy(() => parseRoomQr(input))).toMatchObject({ key: 'qr.error.invalidFormat' })
     },
   )
 })
 
 describe('parseRoomQr limits', () => {
   it('rejects a part longer than the server accepts', () => {
-    expect(() => parseRoomQr(`A|3|${'x'.repeat(51)}`)).toThrow(/QR không đúng định dạng/)
+    expect(thrownBy(() => parseRoomQr(`A|3|${'x'.repeat(51)}`))).toMatchObject({ key: 'qr.error.invalidFormat' })
     expect(parseRoomQr(`A|3|${'x'.repeat(50)}`).room).toHaveLength(50)
   })
 })
@@ -38,10 +48,12 @@ describe('formatRoomQr', () => {
   })
 
   it('names the field that is missing, too long, or contains the separator', () => {
-    expect(() => formatRoomQr({ building: '', floor: '3', room: 'A305' })).toThrow('Chưa nhập Toà nhà')
-    expect(() => formatRoomQr({ building: 'A', floor: '  ', room: 'A305' })).toThrow('Chưa nhập Tầng')
-    expect(() => formatRoomQr({ building: 'A', floor: '3' })).toThrow('Chưa nhập Phòng')
-    expect(() => formatRoomQr({ building: 'A', floor: '3', room: 'x'.repeat(51) })).toThrow(/Phòng tối đa 50/)
-    expect(() => formatRoomQr({ building: 'A|B', floor: '3', room: 'A305' })).toThrow(/Toà nhà không được chứa/)
+    const message = (location) => errorText('vi', thrownBy(() => formatRoomQr(location)))
+    expect(message({ building: '', floor: '3', room: 'A305' })).toBe('Chưa nhập Toà nhà')
+    expect(message({ building: 'A', floor: '  ', room: 'A305' })).toBe('Chưa nhập Tầng')
+    expect(message({ building: 'A', floor: '3' })).toBe('Chưa nhập Phòng')
+    expect(message({ building: 'A', floor: '3', room: 'x'.repeat(51) })).toMatch(/Phòng tối đa 50/)
+    expect(message({ building: 'A|B', floor: '3', room: 'A305' })).toMatch(/Toà nhà không được chứa/)
+    expect(errorText('en', thrownBy(() => formatRoomQr({ building: 'A', floor: '3' })))).toBe('Room is required')
   })
 })

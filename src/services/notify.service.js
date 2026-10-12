@@ -1,4 +1,6 @@
 import { LocalNotifications } from '@capacitor/local-notifications'
+import { translate } from '../i18n'
+import { preferences } from '../preferences/store'
 
 const MAX_NOTIFICATION_ID = 2_147_483_647 // Android notification ids are int32
 
@@ -20,7 +22,7 @@ export async function notifySynced(count) {
       {
         id: Date.now() % MAX_NOTIFICATION_ID,
         title: 'VKU Field Survey',
-        body: `Đã đồng bộ thành công ${count} khảo sát`,
+        body: translate(preferences.get().language, 'notify.synced', { count }),
       },
     ],
   })
