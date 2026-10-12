@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useI18n } from '../hooks/useI18n'
+import { AppError } from '../utils/appError'
 import { MAX_LOCATION_LENGTH } from '../utils/limits'
 import { qrFileName, qrToPixels } from '../utils/qrImage'
 import { formatRoomQr } from '../utils/roomQr'
 
 const FIELDS = [
-  { name: 'building', label: 'Toà nhà', placeholder: 'A' },
-  { name: 'floor', label: 'Tầng', placeholder: '3' },
-  { name: 'room', label: 'Phòng', placeholder: 'A305' },
+  { name: 'building', placeholder: 'A' },
+  { name: 'floor', placeholder: '3' },
+  { name: 'room', placeholder: 'A305' },
 ]
 const CAPTION_HEIGHT = 64
 const MAX_CAPTION_FONT = 30
@@ -27,10 +29,11 @@ function drawCaption(ctx, text, width, top) {
 
 const toBlob = (canvas) =>
   new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Không tạo được ảnh PNG'))), 'image/png'),
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new AppError('qr.pngFailed'))), 'image/png'),
   )
 
 export default function QrGenerator() {
+  const { t, describeError } = useI18n()
   const [location, setLocation] = useState({ building: '', floor: '', room: '' })
   const [message, setMessage] = useState(null)
   const canvasRef = useRef(null)
@@ -40,7 +43,7 @@ export default function QrGenerator() {
     try {
       return { payload: formatRoomQr(location), error: null }
     } catch (err) {
-      return { payload: null, error: touched ? err.message : null }
+      return { payload: null, error: touched ? err : null }
     }
   }, [location, touched])
 
@@ -57,8 +60,8 @@ export default function QrGenerator() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.putImageData(new ImageData(data, width, height), 0, 0)
     const { building, floor, room } = location
-    drawCaption(ctx, `${building.trim()} · Tầng ${floor.trim()} · Phòng ${room.trim()}`, width, height)
-  }, [payload, location])
+    drawCaption(ctx, t('qr.caption', { building: building.trim(), floor: floor.trim(), room: room.trim() }), width, height)
+  }, [payload, location, t])
 
   async function download() {
     setMessage(null)
@@ -70,7 +73,7 @@ export default function QrGenerator() {
       link.click()
       setTimeout(() => URL.revokeObjectURL(url), 0)
     } catch (err) {
-      setMessage(err.message)
+      setMessage(err)
     }
   }
 
@@ -80,25 +83,25 @@ export default function QrGenerator() {
     setMessage(null)
     try {
       const file = new File([await toBlob(canvasRef.current)], qrFileName(location), { type: 'image/png' })
-      if (!navigator.canShare({ files: [file] })) throw new Error('Thiết bị này không chia sẻ được ảnh. Hãy dùng nút Tải ảnh PNG.')
-      await navigator.share({ files: [file], title: `QR phòng ${payload}` })
+      if (!navigator.canShare({ files: [file] })) throw new AppError('qr.shareUnsupported')
+      await navigator.share({ files: [file], title: t('qr.shareTitle', { payload }) })
     } catch (err) {
-      if (err.name !== 'AbortError') setMessage(err.message) // AbortError = the user closed the share sheet
+      if (err.name !== 'AbortError') setMessage(err) // AbortError = the user closed the share sheet
     }
   }
 
   return (
     <section className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold">Tạo QR phòng</h1>
+        <h1 className="text-2xl font-semibold">{t('qr.title')}</h1>
         <p className="mt-1 text-sm text-muted">
-          Nhập thông tin một lần, tải mã QR về và dán ở phòng. Lần sau chỉ cần quét (hoặc tải ảnh QR lên) ở Bước 1 của khảo sát.
+          {t('qr.intro')}
         </p>
       </header>
 
-      {FIELDS.map(({ name, label, placeholder }) => (
+      {FIELDS.map(({ name, placeholder }) => (
         <label key={name} className="block">
-          <span className="field-label">{label}</span>
+          <span className="field-label">{t(`field.${name}`)}</span>
           <input
             value={location[name]}
             onChange={(e) => setLocation((prev) => ({ ...prev, [name]: e.target.value }))}
@@ -109,26 +112,26 @@ export default function QrGenerator() {
         </label>
       ))}
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-      {!payload && !error && <p className="text-sm text-muted">Nhập đủ Toà nhà, Tầng và Phòng để tạo mã QR.</p>}
+      {error && <p role="alert" className="text-sm text-danger">{describeError(error)}</p>}
+      {!payload && !error && <p className="text-sm text-muted">{t('qr.incomplete')}</p>}
 
       {payload && (
         <div className="card space-y-4">
-          <canvas ref={canvasRef} aria-label={`Mã QR ${payload}`} className="mx-auto h-auto w-full max-w-xs rounded-2xl" />
+          <canvas ref={canvasRef} aria-label={t('qr.canvasLabel', { payload })} className="mx-auto h-auto w-full max-w-xs rounded-2xl" />
           <p className="text-center text-sm text-muted">
-            Nội dung mã: <code className="rounded-full bg-brand-100 px-2 py-0.5 text-brand-700">{payload}</code>
+            {t('qr.content')} <code className="rounded-full bg-brand-100 px-2 py-0.5 text-brand-700">{payload}</code>
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <button type="button" onClick={download} className="btn btn-primary">
-              Tải ảnh PNG
+              {t('qr.download')}
             </button>
             {canShareFiles && (
               <button type="button" onClick={share} className="btn btn-secondary">
-                Chia sẻ
+                {t('qr.share')}
               </button>
             )}
           </div>
-          {message && <p role="alert" className="text-center text-sm text-red-600">{message}</p>}
+          {message && <p role="alert" className="text-center text-sm text-danger">{describeError(message)}</p>}
         </div>
       )}
     </section>

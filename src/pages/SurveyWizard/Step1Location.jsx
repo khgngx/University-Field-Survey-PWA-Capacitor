@@ -1,15 +1,17 @@
 import { useRef, useState } from 'react'
 import Icon from '../../components/Icon.jsx'
+import { useI18n } from '../../hooks/useI18n'
 import { readRoomQrFromImage, scanRoomQr } from '../../services/scanner.service'
 import { MAX_LOCATION_LENGTH } from '../../utils/limits'
 
 const FIELDS = [
-  { name: 'building', label: 'Toà nhà', placeholder: 'A' },
-  { name: 'floor', label: 'Tầng', placeholder: '3' },
-  { name: 'room', label: 'Phòng', placeholder: 'A305' },
+  { name: 'building', placeholder: 'A' },
+  { name: 'floor', placeholder: '3' },
+  { name: 'room', placeholder: 'A305' },
 ]
 
 export default function Step1Location({ draft, update }) {
+  const { t, describeError } = useI18n()
   const [busy, setBusy] = useState(null) // 'scan' | 'upload' | null
   const [qrError, setQrError] = useState(null)
   const fileInput = useRef(null)
@@ -20,7 +22,7 @@ export default function Step1Location({ draft, update }) {
       const location = await read()
       if (location) update(location)
     } catch (err) {
-      setQrError(err.message)
+      setQrError(err)
     }
   }
 
@@ -43,20 +45,20 @@ export default function Step1Location({ draft, update }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <button type="button" onClick={() => run('scan', scanRoomQr)} disabled={busy !== null} className={buttonClass}>
-          {busy === 'scan' ? 'Đang mở camera…' : 'Quét QR phòng'}
+          {busy === 'scan' ? t('scan.opening') : t('scan.scanRoom')}
           <span className={iconClass}><Icon name="scan" /></span>
         </button>
         <button type="button" onClick={() => fileInput.current.click()} disabled={busy !== null} className={buttonClass}>
-          {busy === 'upload' ? 'Đang đọc ảnh…' : 'Tải ảnh QR lên'}
+          {busy === 'upload' ? t('scan.reading') : t('scan.upload')}
           <span className={iconClass}><Icon name="upload" /></span>
         </button>
-        <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={onFileChosen} aria-label="Chọn ảnh mã QR" />
+        <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={onFileChosen} aria-label={t('scan.chooseImage')} />
       </div>
-      {qrError && <p role="alert" className="text-sm text-red-600">{qrError}</p>}
+      {qrError && <p role="alert" className="text-sm text-danger">{describeError(qrError)}</p>}
 
-      {FIELDS.map(({ name, label, placeholder }) => (
+      {FIELDS.map(({ name, placeholder }) => (
         <label key={name} className="block">
-          <span className="field-label">{label}</span>
+          <span className="field-label">{t(`field.${name}`)}</span>
           <input
             value={draft[name] ?? ''}
             onChange={(e) => update({ [name]: e.target.value })}

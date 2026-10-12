@@ -58,7 +58,7 @@ describe('generate -> decode round trip (qrcode + jsqr)', () => {
     const text = 'https://example.com'
     const decoded = decodeQrPixels(qrToPixels(text))
     expect(decoded).toBe(text)
-    expect(() => parseRoomQr(decoded)).toThrow(/QR không đúng định dạng/)
+    expect(() => parseRoomQr(decoded)).toThrow('qr.error.invalidFormat')
   })
 })
 

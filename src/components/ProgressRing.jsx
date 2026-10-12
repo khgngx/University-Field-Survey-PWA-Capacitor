@@ -4,7 +4,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 // Decorative: the caller already renders the same progress as text.
 export default function ProgressRing({ value, max }) {
   return (
-    <div aria-hidden="true" className="relative h-20 w-20 shrink-0 rounded-full bg-white">
+    <div aria-hidden="true" className="relative h-20 w-20 shrink-0 rounded-full bg-surface">
       <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
         <circle cx="32" cy="32" r={RADIUS} fill="none" strokeWidth="7" className="stroke-brand-100" />
         <circle

@@ -1,8 +1,11 @@
+import { useI18n } from '../hooks/useI18n'
+
 const STARS = [1, 2, 3, 4, 5]
 
-export default function StarRating({ value, onChange, label = 'Đánh giá' }) {
+export default function StarRating({ value, onChange, label }) {
+  const { t } = useI18n()
   return (
-    <div role="radiogroup" aria-label={label} className="flex justify-between">
+    <div role="radiogroup" aria-label={label ?? t('field.rating')} className="flex justify-between">
       {STARS.map((star) => {
         const selected = value === star
         return (
@@ -11,10 +14,10 @@ export default function StarRating({ value, onChange, label = 'Đánh giá' }) {
             type="button"
             role="radio"
             aria-checked={selected}
-            aria-label={`${star} sao`}
+            aria-label={t('rating.stars', { count: star })}
             onClick={() => onChange(star)}
             className={`h-12 w-12 rounded-full text-3xl leading-none ${
-              value >= star ? 'text-amber-400' : 'text-slate-200'
+              value >= star ? 'text-warning' : 'text-muted/30'
             } ${selected ? 'bg-brand-50 ring-2 ring-brand-500' : ''}`}
           >
             ★

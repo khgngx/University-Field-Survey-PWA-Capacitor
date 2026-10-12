@@ -1,3 +1,5 @@
+import { translate } from '../i18n'
+import { preferences } from '../preferences/store'
 import { parseRoomQr } from '../utils/roomQr'
 
 // Resolves to { building, floor, room }, or null when the user dismisses the scanner.
@@ -9,7 +11,7 @@ export async function scanRoomQr() {
   try {
     result = await CapacitorBarcodeScanner.scanBarcode({
       hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
-      scanInstructions: 'Hướng camera vào mã QR dán ở phòng',
+      scanInstructions: translate(preferences.get().language, 'scan.instructions'),
     })
   } catch (err) {
     if (/cancel/i.test(err?.message ?? '')) return null
@@ -20,8 +22,8 @@ export async function scanRoomQr() {
 }
 
 // Reads a room QR from an uploaded/saved image instead of the live camera. Pure browser code
-// (no Capacitor), so it behaves the same in the PWA and the APK. Rejects with a readable message
-// when the file is not an image, holds no QR, or the QR is not a "toà|tầng|phòng" code.
+// (no Capacitor), so it behaves the same in the PWA and the APK. Rejects with an AppError
+// when the file is not an image, holds no QR, or the QR is not a "building|floor|room" code.
 export async function readRoomQrFromImage(file) {
   const { decodeQrFromImageFile } = await import('../utils/qrDecode')
   return parseRoomQr(await decodeQrFromImageFile(file))

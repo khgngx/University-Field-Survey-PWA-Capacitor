@@ -1,18 +1,82 @@
 @import 'tailwindcss';
 
-@theme {
+/* Light palette. `static` keeps every token in the CSS even when no class uses it, because the
+   charts read theirs from JS. Each --color-* token must be redefined in the dark palette below
+   (src/theme.test.js checks this). */
+@theme static {
   --color-canvas: #f2f3f1;
+  --color-surface: #ffffff;
   --color-ink: #17191c;
-  --color-muted: #6b7280;
+  --color-muted: #636a77;
+  --color-line: #0000001a;
+  --color-backdrop: #dfe2dc;
+  --color-bezel: #17191c;
   --color-brand-50: #f4fbe8;
   --color-brand-100: #e6f6cc;
   --color-brand-200: #d4f0a8;
   --color-brand-400: #a8dc55;
   --color-brand-500: #8ecf2e;
-  --color-brand-700: #4c7a12;
+  --color-brand-700: #487410;
+  --color-on-brand: #17191c;
+  --color-neutral-soft: #f1f5f9;
+  --color-neutral-strong: #475569;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #fef3c7;
+  --color-warning-strong: #92400e;
+  --color-info-soft: #e0f2fe;
+  --color-info-strong: #075985;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-chart-1: #8ecf2e;
+  --color-chart-2: #ff8a34;
+  --color-chart-3: #3b9eff;
+  --color-chart-4: #f45b69;
+  --color-chart-5: #17191c;
+  --color-chart-grid: #eef0ec;
+
+  --shadow-nav: 0 -4px 24px rgb(0 0 0 / 0.06);
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  /* Dark palette. data-theme is always "light" or "dark": src/preferences/documentSync.js
+     resolves the "system" preference before setting it. */
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --color-canvas: #111315;
+    --color-surface: #1d2024;
+    --color-ink: #f1f3f0;
+    --color-muted: #a4aab3;
+    --color-line: #ffffff24;
+    --color-backdrop: #050606;
+    --color-bezel: #3b4047;
+    --color-brand-50: #18240c;
+    --color-brand-100: #243811;
+    --color-brand-200: #2f4a14;
+    --color-brand-400: #a8dc55;
+    --color-brand-500: #8ecf2e;
+    --color-brand-700: #b9ea72;
+    --color-on-brand: #17191c;
+    --color-neutral-soft: #2a2e34;
+    --color-neutral-strong: #c5cbd3;
+    --color-warning: #fbbf24;
+    --color-warning-soft: #3a2c0a;
+    --color-warning-strong: #fcd34d;
+    --color-info-soft: #0c2f44;
+    --color-info-strong: #7dd3fc;
+    --color-danger: #fca5a5;
+    --color-danger-soft: #451a1a;
+    --color-chart-1: #8ecf2e;
+    --color-chart-2: #ff9a52;
+    --color-chart-3: #5aaeff;
+    --color-chart-4: #f7707c;
+    --color-chart-5: #d7dbe0;
+    --color-chart-grid: #2a2e33;
+  }
+
   body {
     background-color: var(--color-canvas);
   }
@@ -20,7 +84,7 @@
 
 @layer components {
   .card {
-    @apply rounded-3xl bg-white p-4;
+    @apply rounded-3xl bg-surface p-4;
   }
 
   .btn {
@@ -32,15 +96,15 @@
   }
 
   .btn-primary {
-    @apply bg-brand-500 text-ink;
+    @apply bg-brand-500 text-on-brand;
   }
 
   .btn-secondary {
-    @apply bg-white text-ink ring-1 ring-black/10 ring-inset;
+    @apply bg-surface text-ink ring-1 ring-line ring-inset;
   }
 
   .field {
-    @apply w-full rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 outline-none ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500;
+    @apply w-full rounded-2xl bg-surface px-4 py-3 ring-1 ring-line/50 outline-none ring-inset placeholder:text-muted/70 focus:ring-2 focus:ring-brand-500;
   }
 
   .field-label {
