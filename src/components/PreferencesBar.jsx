@@ -9,7 +9,7 @@ const DISPLAY_ICONS = { web: 'monitor', mobile: 'phone' }
 // Each option is { value, label, icon } or { value, label, text }; `label` is the accessible name.
 function SegmentedControl({ label, value, options, onChange }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex rounded-full bg-surface p-1 ring-1 ring-line ring-inset">
+    <div role="radiogroup" aria-label={label} className="flex shrink-0 gap-1 rounded-full bg-surface p-1 ring-1 ring-line ring-inset">
       {options.map((option) => {
         const selected = option.value === value
         return (
@@ -21,7 +21,7 @@ function SegmentedControl({ label, value, options, onChange }) {
             aria-label={option.label}
             title={option.label}
             onClick={() => onChange(option.value)}
-            className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-xs font-semibold ${
+            className={`flex h-8 min-w-10 items-center justify-center rounded-full px-2 text-xs leading-none font-semibold whitespace-nowrap ${
               selected ? 'bg-brand-500 text-on-brand' : 'text-muted'
             }`}
           >
@@ -39,9 +39,9 @@ export default function PreferencesBar() {
   const canFramePhone = useCanFramePhone()
 
   return (
-    <header className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-2 px-4 pt-4">
-      <p className="truncate font-semibold">{t('app.name')}</p>
-      <div role="group" aria-label={t('prefs.label')} className="flex flex-wrap items-center gap-2">
+    <header className="mx-auto flex max-w-2xl flex-col items-center gap-3 px-4 pt-4">
+      <p className="max-w-full truncate font-semibold">{t('app.name')}</p>
+      <div role="group" aria-label={t('prefs.label')} className="flex flex-wrap items-center justify-center gap-2">
         <SegmentedControl
           label={t('prefs.theme')}
           value={theme}
